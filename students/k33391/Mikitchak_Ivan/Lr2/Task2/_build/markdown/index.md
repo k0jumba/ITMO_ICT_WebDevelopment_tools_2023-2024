@@ -54,3 +54,14 @@ documentation for details.
   * [`main()`](threading_solution2.md#threading_solution2.main)
   * [`parse_and_save()`](threading_solution2.md#threading_solution2.parse_and_save)
   * [`store_user()`](threading_solution2.md#threading_solution2.store_user)
+
+
+# Scripts' completion times
+| Script        | Time(sec)        |
+|---------------|-------------|
+| asynchronous_solution.py    | 0.7127     |
+| asynchronous_solution2.py    | 17.1506     |
+| multiprocessing_solution.py    | 0.9274     |
+| multiprocessing_solution2.py    | 13.8117     |
+| threading_solution.py    | 0.5085    |
+| threading_solution2.py    | 9.9953     |
