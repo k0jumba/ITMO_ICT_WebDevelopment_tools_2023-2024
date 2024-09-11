@@ -13,9 +13,29 @@ URL = "https://randomuser.me/api/?format=json"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
+    """Hashes the provided password using bcrypt.
+
+    Args:
+        password: The plain text password to be hashed.
+
+    Returns:
+        str: The hashed password.
+    """
     return pwd_context.hash(password)
 
 async def fetch_data(session):
+    """Fetches JSON data from a predefined URL asynchronously.
+
+    Args:
+        session: An aiohttp.ClientSession object used to make the HTTP request.
+
+    Returns:
+        dict: The fetched JSON data if successful.
+        None: If an error occurs during the request or parsing.
+
+    Raises:
+        Exception: If an error occurs while fetching or decoding JSON.
+    """
     try:
         async with session.get(URL) as response:
             if response.status == 200:
@@ -33,6 +53,18 @@ async def fetch_data(session):
         return None
 
 def extract_user(data):
+    """Extracts user information from the provided JSON data.
+
+    Args:
+        data: A dictionary containing user data in JSON format.
+
+    Returns:
+        dict: A dictionary containing extracted user fields (email, hashed password, first name, and last name).
+        None: If an error occurs during extraction.
+
+    Raises:
+        Exception: If an error occurs while extracting user data.
+    """
     try:
         user = {
             "email": data["results"][0]["email"],
@@ -46,6 +78,14 @@ def extract_user(data):
         return None
 
 async def store_user(user):
+    """Stores user information in the database asynchronously.
+
+    Args:
+        user: A dictionary containing the user's email, hashed password, first name, and last name.
+
+    Raises:
+        Exception: If an error occurs while inserting user data into the database.
+    """
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DB_HOST"),
@@ -63,6 +103,14 @@ async def store_user(user):
         print(f"An error occurred while storing user: {e}")
 
 async def parse_and_save(session):
+    """Fetches user data, extracts relevant fields, and stores them in the database.
+
+    Args:
+        session: An aiohttp.ClientSession object used to make HTTP requests.
+
+    Returns:
+        None
+    """
     data = await fetch_data(session)
     if data is None:
         return
@@ -73,6 +121,7 @@ async def parse_and_save(session):
     print(user)
 
 async def main():
+    """Main function to initiate the asynchronous data fetching and storing tasks."""
     load_dotenv()
 
     n_tasks = 4

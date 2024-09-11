@@ -6,7 +6,25 @@ from dotenv import load_dotenv
 import os
 from bs4 import BeautifulSoup
 
+"""A script for fetching headers from URL and storing them in the database.
+Uses asycnhronous approach.
+"""
+
 async def fetch_html(session, url):
+    """A function for fetching html from provided URL.
+
+Args:
+    session: requests.Session object
+    url: URL string
+
+Returns:
+    HTML as plain text or None if an error has occured.
+
+Raises:
+    Exception: An error occurred while decoding text for <URL>
+    Exception: Request to <URL> failed with status code <status code>
+    Exception: An error occurred while fetching html from <URL>
+"""
     try:
         async with session.get(url) as response:
             if response.status == 200:
@@ -23,7 +41,19 @@ async def fetch_html(session, url):
         print(f"An error occurred while fetching html from {url}: {e}")
         return None
 
+
 def extract_headers(html):
+    """A function for extracting the headers section of html page.
+
+Args:
+    html: a string containing HTML page
+
+Returns:
+    HTML as plain text or None if an error has occured
+
+Raises:
+    Exception: An error occurred while extracting headers
+"""
     try:
         soup = BeautifulSoup(html, "html.parser")
         head = soup.head
@@ -32,7 +62,17 @@ def extract_headers(html):
         print(f"An error occurred while extracting headers: {e}")
         return None
 
+
 async def store_headers(url, headers):
+    """A function for storing headers in the database.
+
+Args:
+    url: URL string
+    headers: string containing the headers section
+
+Raises:
+    Exception: An error occurred while storing headers for <URL>
+"""
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DB_HOST"),
@@ -49,7 +89,14 @@ async def store_headers(url, headers):
     except Exception as e:
         print(f"An error occurred while storing headers for {url}: {e}")
 
+
 async def parse_and_save(session, url):
+    """The task function for fetching html and storing it in the database.
+
+Args:
+    session: requests.Session object
+    url: URL string
+"""
     html = await fetch_html(session, url)
     if html is None:
         return
@@ -59,13 +106,17 @@ async def parse_and_save(session, url):
     await store_headers(url, headers)
     print(f"Headers for {url}:\n{headers}\n\n\n\n\n")
 
+
 async def main():
+    """The main function.
+"""
     urls = ["https://example.com", "https://www.gnu.org", "https://www.wikipedia.org", "https://toscrape.com"]
     load_dotenv()
 
     async with aiohttp.ClientSession() as session:
         tasks = [parse_and_save(session, url) for url in urls]
         await asyncio.gather(*tasks)
+
     
 if __name__ == "__main__":
     start = time.time()

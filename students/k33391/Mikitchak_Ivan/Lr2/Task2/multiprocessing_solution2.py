@@ -15,13 +15,37 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 log_lock = multiprocessing.Lock()
 
 def log(msg):
+    """Logs a message to the console in a thread-safe manner.
+
+    Args:
+        msg: The message to be printed to the console.
+    """
     with log_lock:
         print(msg)
 
 def hash_password(password: str) -> str:
+    """Hashes a given password using bcrypt.
+
+    Args:
+        password: The plain text password to be hashed.
+
+    Returns:
+        str: The hashed password.
+    """
     return pwd_context.hash(password)
 
 def fetch_data(session):
+    """Fetches random user data from a public API using the provided session.
+
+    Args:
+        session: A requests.Session object used to make the HTTP request.
+
+    Returns:
+        dict: The fetched user data as a dictionary, or None if an error occurs.
+
+    Raises:
+        Exception: If an error occurs while fetching or decoding the response.
+    """
     try:
         response = session.get(URL)
         if response.status_code == 200:
@@ -39,12 +63,23 @@ def fetch_data(session):
         return None
 
 def extract_user(data):
+    """Extracts user information from the API response data.
+
+    Args:
+        data: A dictionary containing user data fetched from the API.
+
+    Returns:
+        dict: A dictionary containing extracted user information (email, hashed password, first name, last name), or None if an error occurs.
+
+    Raises:
+        Exception: If an error occurs while extracting user information.
+    """
     try:
         user = {
             "email": data["results"][0]["email"],
             "hashed_password": hash_password(data["results"][0]["login"]["password"]),
-            "first_name": data["results"][0]["name"]["first"],  # Corrected field name
-            "last_name": data["results"][0]["name"]["last"]     # Corrected field name
+            "first_name": data["results"][0]["name"]["first"],
+            "last_name": data["results"][0]["name"]["last"]
         }
         return user
     except Exception as e:
@@ -52,6 +87,14 @@ def extract_user(data):
         return None
 
 def store_user(user):
+    """Stores user data into the PostgreSQL database.
+
+    Args:
+        user: A dictionary containing user information to be stored in the database.
+
+    Raises:
+        Exception: If an error occurs while connecting to the database or storing user data.
+    """
     try:
         with psycopg2.connect(
             host=os.getenv("DB_HOST"),
@@ -70,6 +113,11 @@ def store_user(user):
         print(f"An error occurred while storing user: {e}")
 
 def parse_and_save(session):
+    """Fetches user data, extracts the user information, and stores it in the database.
+
+    Args:
+        session: A requests.Session object used to make the HTTP request.
+    """
     data = fetch_data(session)
     if data is None:
         return
@@ -80,6 +128,7 @@ def parse_and_save(session):
     log(user)
 
 def main():
+    """Main function that initializes environment variables and starts multiple processes to fetch and store user data concurrently."""
     load_dotenv()
 
     n_tasks = 4
@@ -92,7 +141,6 @@ def main():
 
         for process in processes:
             process.join()
-
 
 if __name__ == "__main__":
     start = time.time()
