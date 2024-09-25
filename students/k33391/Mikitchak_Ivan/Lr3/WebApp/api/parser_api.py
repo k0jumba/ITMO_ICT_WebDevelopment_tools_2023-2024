@@ -34,5 +34,5 @@ def get_result(task_id: str) -> UserSerialized:
 
 @router.post("/async_parser", status_code=status.HTTP_202_ACCEPTED)
 def call_parser_background(background_tasks: BackgroundTasks):
-    background_tasks.add_task(parse_user)
+    background_tasks.add_task(parse_user.delay)
     return {"message": "Task submitter in the background."}
